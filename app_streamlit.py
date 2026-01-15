@@ -291,3 +291,186 @@ if st.session_state.mode == "new":
         st.json(selected)
     
         
+if st.session_state.mode == "migrate":
+    st.subheader("Migrate Existing Application to Azure")
+
+    with st.form("migrate_app_form"):
+        # ---------------------------
+        # Application Profile
+        # ---------------------------
+        st.subheader("Application Profile")
+
+        app_name = st.text_input("Application Name")
+        application_size = st.selectbox(
+            "Application Size",
+            ["Small", "Medium", "Large"]
+        )
+
+        application_type = st.selectbox(
+            "Application Type",
+            ["Monolith", "Microservices", "SOA"]
+        )
+
+        statefulness = st.selectbox(
+            "Application State",
+            ["Stateless", "Stateful"]
+        )
+
+        # ---------------------------
+        # Technology Stack
+        # ---------------------------
+        st.subheader("Technology Stack")
+
+        frontend_tech = st.text_input("Frontend Technology")
+        backend_tech = st.text_input("Backend Technology")
+        middleware_used = st.text_input("Middleware (e.g. MQ, Kafka, ESB)")
+        database_engine = st.selectbox(
+            "Database Engine",
+            ["SQL Server", "Oracle", "MySQL", "PostgreSQL", "MongoDB", "Other"]
+        )
+
+        # ---------------------------
+        # Compute & Hosting
+        # ---------------------------
+        st.subheader("Compute & Hosting")
+
+        hosting_preference = st.selectbox(
+            "Preferred Azure Hosting",
+            ["VM", "App Service", "AKS", "No Preference"]
+        )
+
+        os_type = st.selectbox(
+            "Operating System",
+            ["Linux", "Windows"]
+        )
+
+        containerized = st.checkbox("Currently Containerized")
+
+        # ---------------------------
+        # Data & Storage
+        # ---------------------------
+        st.subheader("Data")
+
+        data_size_gb = st.number_input(
+            "Total Data Size (GB)",
+            min_value=1
+        )
+
+        backup_required = st.checkbox("Backup Required")
+
+        # ---------------------------
+        # Security & Identity
+        # ---------------------------
+        st.subheader("Security")
+
+        auth_method = st.selectbox(
+            "Authentication Method",
+            ["Basic Auth", "LDAP", "SSO", "OAuth"]
+        )
+
+        compliance = st.multiselect(
+            "Compliance Requirements",
+            ["GDPR", "HIPAA", "SOC2", "ISO27001"]
+        )
+
+        # ---------------------------
+        # Connectivity
+        # ---------------------------
+        st.subheader("Connectivity")
+
+        end_user_client = st.selectbox(
+            "End User Client",
+            ["Browser", "Desktop", "Mobile", "API"]
+        )
+
+        network_port = st.number_input(
+            "Exposed Network Port",
+            value=443
+        )
+
+        external_dependency = st.checkbox(
+            "External / 3rd Party Integrations"
+        )
+
+        # ---------------------------
+        # Operations
+        # ---------------------------
+        st.subheader("Operations")
+
+        background_jobs = st.checkbox("Background Jobs / Schedulers")
+        ci_cd_required = st.checkbox("CI/CD Required")
+
+        submit_migrate = st.form_submit_button("Generate Migration Options")
+
+    # ---------------------------
+    # BUILD PAYLOAD
+    # ---------------------------
+    if submit_migrate:
+        mig_payload = {
+            "application_profile": {
+                "name": app_name,
+                "size": application_size,
+                "type": application_type,
+                "statefulness": statefulness
+            },
+            "technology_stack": {
+                "frontend": frontend_tech,
+                "backend": backend_tech,
+                "middleware": middleware_used,
+                "database": database_engine
+            },
+            "compute": {
+                "hosting_preference": hosting_preference,
+                "os_type": os_type,
+                "containerized": containerized
+            },
+            "data": {
+                "data_size_gb": data_size_gb,
+                "backup_required": backup_required
+            },
+            "security": {
+                "auth_method": auth_method,
+                "compliance": compliance
+            },
+            "connectivity": {
+                "end_user_client": end_user_client,
+                "network_port": network_port,
+                "external_dependency": external_dependency
+            },
+            "operations": {
+                "background_jobs": background_jobs,
+                "ci_cd_required": ci_cd_required
+            }
+        }
+
+        st.session_state.mig_payload = mig_payload
+
+        with st.spinner("Generating migration options using GPT-5.2..."):
+            try:
+                st.session_state.mig_suggestions = new_application(
+                    mig_payload,
+                    mode="migrate"
+                )
+            except Exception as e:
+                st.error(f"GPT call failed: {e}")
+                st.stop()
+
+        store_gpt_output(mig_payload, st.session_state.mig_suggestions)
+
+    # ---------------------------
+    # SHOW MIGRATION OPTIONS
+    # ---------------------------
+    if st.session_state.mig_suggestions:
+        st.subheader("Migration Architecture Options")
+
+        titles = [
+            opt.get("title", f"Option {i+1}")
+            for i, opt in enumerate(st.session_state.mig_suggestions)
+        ]
+
+        choice = st.radio("Choose a migration option", titles)
+
+        selected = st.session_state.mig_suggestions[titles.index(choice)]
+        st.session_state.selected_migration_option = selected
+
+        st.json(selected)
