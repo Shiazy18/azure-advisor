@@ -1,6 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
-from gpt import new_application
+from gpt import new_application, migrate_application
 from cosmos_client import store_gpt_output
 load_dotenv()
 
@@ -326,7 +326,7 @@ if st.session_state.mode == "migrate":
         middleware_used = st.text_input("Middleware (e.g. MQ, Kafka, ESB)")
         database_engine = st.selectbox(
             "Database Engine",
-            ["SQL Server", "Oracle", "MySQL", "PostgreSQL", "MongoDB", "Other"]
+            ["No DB","SQL Server", "Oracle", "MySQL", "PostgreSQL", "MongoDB", "Other"]
         )
 
         # ---------------------------
@@ -365,12 +365,12 @@ if st.session_state.mode == "migrate":
 
         auth_method = st.selectbox(
             "Authentication Method",
-            ["Basic Auth", "LDAP", "SSO", "OAuth"]
+            ["No Auth","Basic Auth", "LDAP", "SSO", "OAuth"]
         )
 
         compliance = st.multiselect(
             "Compliance Requirements",
-            ["GDPR", "HIPAA", "SOC2", "ISO27001"]
+            ["NA","GDPR", "HIPAA", "SOC2", "ISO27001"]
         )
 
         # ---------------------------
@@ -445,32 +445,25 @@ if st.session_state.mode == "migrate":
 
         st.session_state.mig_payload = mig_payload
 
-        with st.spinner("Generating migration options using GPT-5.2..."):
+        with st.spinner("Calling GPT 5.2-chat(Azure Foundry)..."):
             try:
-                st.session_state.mig_suggestions = new_application(
-                    mig_payload,
-                    mode="migrate"
-                )
+                st.session_state.mig_suggestions = migrate_application(mig_payload)
             except Exception as e:
                 st.error(f"GPT call failed: {e}")
                 st.stop()
-
-        store_gpt_output(mig_payload, st.session_state.mig_suggestions)
+        store_gpt_output(st.session_state.mig_payload, st.session_state.mig_suggestions)
 
     # ---------------------------
     # SHOW MIGRATION OPTIONS
     # ---------------------------
     if st.session_state.mig_suggestions:
-        st.subheader("Migration Architecture Options")
-
         titles = [
-            opt.get("title", f"Option {i+1}")
-            for i, opt in enumerate(st.session_state.mig_suggestions)
+            s.get("title", f"Option {i+1}")
+            for i, s in enumerate(st.session_state.mig_suggestions)
         ]
 
-        choice = st.radio("Choose a migration option", titles)
+        choice = st.radio("Choose a suggestion", titles)
 
         selected = st.session_state.mig_suggestions[titles.index(choice)]
-        st.session_state.selected_migration_option = selected
-
+       # st.session_state.selected_migration_option = selected
         st.json(selected)
