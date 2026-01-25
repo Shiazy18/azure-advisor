@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: azure-advisor
+  namespace: azure-advisor-namespace
 spec:
   selector:
     matchLabels:
@@ -20,3 +21,35 @@ spec:
             cpu: "500m"
         ports:
         - containerPort: 8501
+        env:
+        - name: COSMOS_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: azure-advisor-secrets
+              key: COSMOS_ENDPOINT
+        - name: COSMOS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-advisor-secrets
+              key: COSMOS_KEY
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            secretKeyRef:   
+              name: azure-advisor-secrets
+              key: AZURE_OPENAI_ENDPOINT
+        - name: AZURE_OPENAI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: azure-advisor-secrets
+              key: AZURE_OPENAI_KEY
+      volumes:
+        - name: "secrets-store"
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: azure-advisor-helm-spc
+      volumeMounts:
+        - name: "secrets-store"
+          mountPath: "/mnt/secrets"
+          readOnly: true
