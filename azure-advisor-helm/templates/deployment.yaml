@@ -60,6 +60,49 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          env:
+            {{- toYaml . | nindent 12 }}
+            - name: AZURE_OPENAI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: AZURE_OPENAI_ENDPOINT
+            - name: AZURE_OPENAI_DEPLOYMENT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: AZURE_OPENAI_DEPLOYMENT
+            - name: AZURE_OPENAI_VERSION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: AZURE_OPENAI_VERSION
+            - name: COSMOS_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: COSMOS_ENDPOINT
+            - name: COSMOS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: COSMOS_KEY
+            - name: COSMOS_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: COSMOS_DATABASE
+            - name: COSMOS_USERS_CONTAINER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: COSMOS_USERS_CONTAINER
+            - name: COSMOS_QUERIES_CONTAINER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "azure-advisor-helm.fullname" . }}-secrets
+                  key: COSMOS_QUERIES_CONTAINER
+
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
