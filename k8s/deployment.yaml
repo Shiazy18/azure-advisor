@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azure-advisor
+spec:
+  selector:
+    matchLabels:
+      app: azure-advisor
+  template:
+    metadata:
+      labels:
+        app: azure-advisor
+    spec:
+      containers:
+      - name: azure-advisor
+        image: azureadvisor.azurecr.io/azure-advisor:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8501
